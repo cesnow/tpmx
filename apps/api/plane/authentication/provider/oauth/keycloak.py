@@ -5,9 +5,11 @@
 # Python imports
 import os
 from datetime import datetime, timedelta
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlparse
 
 import pytz
+from keycloak import KeycloakOpenID
+from keycloak.exceptions import KeycloakError
 
 # Module imports
 from plane.authentication.adapter.oauth import OauthAdapter
@@ -16,6 +18,16 @@ from plane.authentication.adapter.error import (
     AUTHENTICATION_ERROR_CODES,
     AuthenticationException,
 )
+
+
+def _decode_kc_error_body(exc):
+    body = getattr(exc, "response_body", b"") or b""
+    if isinstance(body, bytes):
+        try:
+            return body.decode(errors="replace")
+        except Exception:
+            return repr(body)
+    return str(body)
 
 
 class KeycloakOAuthProvider(OauthAdapter):
@@ -69,62 +81,71 @@ class KeycloakOAuthProvider(OauthAdapter):
         KEYCLOAK_HOST = KEYCLOAK_HOST.rstrip("/")
 
         realm_base = f"{KEYCLOAK_HOST}/realms/{KEYCLOAK_REALM}/protocol/openid-connect"
+
+        self.keycloak = KeycloakOpenID(
+            server_url=KEYCLOAK_HOST,
+            client_id=KEYCLOAK_CLIENT_ID,
+            realm_name=KEYCLOAK_REALM,
+            client_secret_key=KEYCLOAK_CLIENT_SECRET,
+            verify=True,
+        )
+
+        config_well_known = self.keycloak.well_known()
+
         self.token_url = f"{realm_base}/token"
         self.userinfo_url = f"{realm_base}/userinfo"
-
-        client_id = KEYCLOAK_CLIENT_ID
-        client_secret = KEYCLOAK_CLIENT_SECRET
-
         redirect_uri = f"{'https' if request.is_secure() else 'http'}://{request.get_host()}/auth/keycloak/callback/"
-        url_params = {
-            "client_id": client_id,
-            "scope": self.scope,
-            "redirect_uri": redirect_uri,
-            "response_type": "code",
-            "state": state,
-        }
-        auth_url = f"{realm_base}/auth?{urlencode(url_params)}"
+
+        auth_url = self.keycloak.auth_url(
+            redirect_uri=redirect_uri,
+            scope=self.scope,
+            state=state or "",
+        )
 
         super().__init__(
             request,
             self.provider,
-            client_id,
+            KEYCLOAK_CLIENT_ID,
             self.scope,
             redirect_uri,
             auth_url,
             self.token_url,
             self.userinfo_url,
-            client_secret,
+            KEYCLOAK_CLIENT_SECRET,
             code,
             callback=callback,
         )
 
     def set_token_data(self):
-        data = {
-            "code": self.code,
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "redirect_uri": self.redirect_uri,
-            "grant_type": "authorization_code",
-        }
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
-        token_response = self.get_user_token(data=data, headers=headers)
+        try:
+            token_response = self.keycloak.token(
+                grant_type="authorization_code",
+                code=self.code,
+                redirect_uri=self.redirect_uri,
+            )
+        except KeycloakError as e:
+            self.logger.warning(
+                "Keycloak token exchange failed: status=%s body=%s redirect_uri=%s",
+                getattr(e, "response_code", "?"),
+                _decode_kc_error_body(e),
+                self.redirect_uri,
+            )
+            raise AuthenticationException(
+                error_code=AUTHENTICATION_ERROR_CODES["KEYCLOAK_OAUTH_PROVIDER_ERROR"],
+                error_message="KEYCLOAK_OAUTH_PROVIDER_ERROR",
+            )
+
         super().set_token_data(
             {
                 "access_token": token_response.get("access_token"),
-                "refresh_token": token_response.get("refresh_token", None),
+                "refresh_token": token_response.get("refresh_token"),
                 "access_token_expired_at": (
-                    datetime.now(tz=pytz.utc)
-                    + timedelta(seconds=token_response.get("expires_in"))
+                    datetime.now(tz=pytz.utc) + timedelta(seconds=token_response["expires_in"])
                     if token_response.get("expires_in")
                     else None
                 ),
                 "refresh_token_expired_at": (
-                    datetime.now(tz=pytz.utc)
-                    + timedelta(seconds=token_response.get("refresh_expires_in"))
+                    datetime.now(tz=pytz.utc) + timedelta(seconds=token_response["refresh_expires_in"])
                     if token_response.get("refresh_expires_in")
                     else None
                 ),
@@ -133,8 +154,20 @@ class KeycloakOAuthProvider(OauthAdapter):
         )
 
     def set_user_data(self):
-        user_info_response = self.get_user_response()
-        email = user_info_response.get("email")
+        try:
+            user_info = self.keycloak.userinfo(self.token_data.get("access_token"))
+        except KeycloakError as e:
+            self.logger.warning(
+                "Keycloak userinfo failed: status=%s body=%s",
+                getattr(e, "response_code", "?"),
+                _decode_kc_error_body(e),
+            )
+            raise AuthenticationException(
+                error_code=AUTHENTICATION_ERROR_CODES["KEYCLOAK_OAUTH_PROVIDER_ERROR"],
+                error_message="KEYCLOAK_OAUTH_PROVIDER_ERROR",
+            )
+
+        email = user_info.get("email")
         if not email:
             raise AuthenticationException(
                 error_code=AUTHENTICATION_ERROR_CODES["KEYCLOAK_OAUTH_PROVIDER_ERROR"],
@@ -144,13 +177,15 @@ class KeycloakOAuthProvider(OauthAdapter):
             {
                 "email": email,
                 "user": {
-                    "provider_id": str(user_info_response.get("sub")),
+                    "provider_id": str(user_info.get("sub")),
                     "email": email,
-                    "avatar": user_info_response.get("picture", ""),
-                    "first_name": user_info_response.get("given_name")
-                    or user_info_response.get("preferred_username")
-                    or user_info_response.get("name", ""),
-                    "last_name": user_info_response.get("family_name", ""),
+                    "avatar": user_info.get("picture", ""),
+                    "first_name": (
+                        user_info.get("given_name")
+                        or user_info.get("preferred_username")
+                        or user_info.get("name", "")
+                    ),
+                    "last_name": user_info.get("family_name", ""),
                     "is_password_autoset": True,
                 },
             }

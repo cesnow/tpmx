@@ -55,6 +55,20 @@ class KeycloakOauthInitiateEndpoint(View):
                 params["next_path"] = str(validate_next_path(next_path))
             url = urljoin(base_host(request=request, is_app=True), "?" + urlencode(params))
             return HttpResponseRedirect(url)
+        except Exception as e:
+            import logging
+            logging.getLogger("plane.authentication").exception(
+                "Unhandled error initiating Keycloak auth"
+            )
+            exc = AuthenticationException(
+                error_code=AUTHENTICATION_ERROR_CODES["KEYCLOAK_OAUTH_PROVIDER_ERROR"],
+                error_message="KEYCLOAK_OAUTH_PROVIDER_ERROR",
+            )
+            params = exc.get_error_dict()
+            if next_path:
+                params["next_path"] = str(validate_next_path(next_path))
+            url = urljoin(base_host(request=request, is_app=True), "?" + urlencode(params))
+            return HttpResponseRedirect(url)
 
 
 class KeycloakCallbackEndpoint(View):
