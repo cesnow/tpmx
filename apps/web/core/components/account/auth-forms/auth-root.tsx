@@ -51,7 +51,7 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
   // derived values
   const oAuthActionText = authMode === EAuthModes.SIGN_UP ? "Sign up" : "Sign in";
   const { isOAuthEnabled, oAuthOptions } = useOAuthConfig(oAuthActionText);
-  const isEmailBasedAuthEnabled = config?.is_email_password_enabled || config?.is_magic_login_enabled;
+  const isEmailBasedAuthEnabled = config?.is_email_password_enabled;
   const noAuthMethodsAvailable = !isOAuthEnabled && !isEmailBasedAuthEnabled;
 
   useEffect(() => {
@@ -137,10 +137,10 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
           authStep={authStep}
           authMode={authMode}
           email={email}
-          setEmail={(email) => setEmail(email)}
-          setAuthMode={(authMode) => setAuthMode(authMode)}
-          setAuthStep={(authStep) => setAuthStep(authStep)}
-          setErrorInfo={(errorInfo) => setErrorInfo(errorInfo)}
+          setEmail={setEmail}
+          setAuthMode={setAuthMode}
+          setAuthStep={setAuthStep}
+          setErrorInfo={setErrorInfo}
           currentAuthMode={currentAuthMode}
         />
       )}
