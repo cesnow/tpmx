@@ -12,13 +12,5 @@ export const useAuthenticationModes = (props: TGetAuthenticationModeProps): TIns
   // derived values
   const authenticationModes = getCoreAuthenticationModesMap(props);
 
-  return [
-    authenticationModes["unique-codes"],
-    authenticationModes["passwords-login"],
-    authenticationModes["google"],
-    authenticationModes["github"],
-    authenticationModes["gitlab"],
-    authenticationModes["gitea"],
-    authenticationModes["keycloak"],
-  ];
+  return [authenticationModes["passwords-login"], authenticationModes["keycloak"]];
 };
