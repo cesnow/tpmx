@@ -38,6 +38,7 @@ from plane.db.models import (
     DEFAULT_STATES,
     Workspace,
     WorkspaceMember,
+    IssueType,
 )
 from plane.db.models.intake import IntakeIssueStatus
 from plane.utils.host import base_host
@@ -287,6 +288,19 @@ class ProjectViewSet(BaseViewSet):
                     )
                     for state in DEFAULT_STATES
                 ]
+            )
+
+            # Seed the default "Task" work item type for the project
+            IssueType.objects.create(
+                name="Task",
+                description="Default work item type with the option to add new properties",
+                project_id=serializer.data["id"],
+                workspace=serializer.instance.workspace,
+                is_default=True,
+                is_active=True,
+                level=0,
+                logo_props={"in_use": "icon", "icon": {"name": "Layers", "color": "#6695ff"}},
+                created_by=request.user,
             )
 
             project = self.get_queryset().filter(pk=serializer.data["id"]).first()

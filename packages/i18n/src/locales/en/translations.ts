@@ -1682,6 +1682,9 @@ export default {
     },
   },
   project_settings: {
+    work_item_types: {
+      label: "Work item Types",
+    },
     general: {
       enter_project_id: "Enter project ID",
       please_select_a_timezone: "Please select a timezone",

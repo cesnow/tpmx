@@ -79,7 +79,16 @@ from .workspace import (
 
 from .favorite import UserFavorite
 
-from .issue_type import IssueType
+from .issue_type import IssueType, ProjectIssueType
+
+from .issue_property import (
+    IssueProperty,
+    IssueTypeProperty,
+    IssuePropertyOption,
+    IssuePropertyValue,
+    PropertyTypeEnum,
+    RelationTypeEnum,
+)
 
 from .recent_visit import UserRecentVisit
 
