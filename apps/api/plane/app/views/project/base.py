@@ -299,7 +299,7 @@ class ProjectViewSet(BaseViewSet):
                 is_default=True,
                 is_active=True,
                 level=0,
-                logo_props={"in_use": "icon", "icon": {"name": "Layers", "color": "#6695ff"}},
+                logo_props={"in_use": "icon", "icon": {"name": "Copy", "color": "#6695ff"}},
                 created_by=request.user,
             )
 
