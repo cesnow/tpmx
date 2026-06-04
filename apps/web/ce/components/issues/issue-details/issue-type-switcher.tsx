@@ -76,7 +76,13 @@ export const IssueTypeSwitcher = observer(function IssueTypeSwitcher(props: TIss
             <span className="text-caption-sm-medium font-medium">{issueType.name}</span>
           </button>
         )}
-        <IssueIdentifier issueId={issueId} projectId={projectId} size="md" enableClickToCopyIdentifier />
+        <IssueIdentifier
+          issueId={issueId}
+          projectId={projectId}
+          size="md"
+          enableClickToCopyIdentifier
+          showIssueTypeIcon={false}
+        />
         {!disabled && issueType && (
           <button
             type="button"

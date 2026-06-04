@@ -8,11 +8,7 @@ import { set, unset } from "lodash-es";
 import { action, makeObservable, observable, runInAction } from "mobx";
 import { computedFn } from "mobx-utils";
 // services
-import type {
-  TIssueProperty,
-  TIssueType,
-  TIssueTypePropertyLink,
-} from "@/services/issue-type/issue-type.service";
+import type { TIssueProperty, TIssueType, TIssueTypePropertyLink } from "@/services/issue-type/issue-type.service";
 import { IssueTypeService } from "@/services/issue-type/issue-type.service";
 // store
 import type { CoreRootStore } from "../root.store";
@@ -44,11 +40,7 @@ export interface IIssueTypeStore {
   deleteType: (workspaceSlug: string, projectId: string, typeId: string) => Promise<void>;
   markDefault: (workspaceSlug: string, projectId: string, typeId: string) => Promise<void>;
   // property crud
-  createProperty: (
-    workspaceSlug: string,
-    projectId: string,
-    data: Partial<TIssueProperty>
-  ) => Promise<TIssueProperty>;
+  createProperty: (workspaceSlug: string, projectId: string, data: Partial<TIssueProperty>) => Promise<TIssueProperty>;
   updateProperty: (
     workspaceSlug: string,
     projectId: string,
@@ -102,16 +94,22 @@ export class IssueTypeStore implements IIssueTypeStore {
   // ---------------------------------------------------------------- computed actions
   getProjectIssueTypes = computedFn((projectId: string | null | undefined) => {
     if (!projectId) return [];
-    return Object.values(this.typeMap)
-      .filter((type) => type.project_id === projectId)
-      .toSorted((a, b) => a.name.localeCompare(b.name));
+    return (
+      Object.values(this.typeMap)
+        .filter((type) => type.project_id === projectId)
+        // eslint-disable-next-line unicorn/no-array-sort
+        .sort((a, b) => a.name.localeCompare(b.name))
+    );
   });
 
   getProjectProperties = computedFn((projectId: string | null | undefined) => {
     if (!projectId) return [];
-    return Object.values(this.propertyMap)
-      .filter((property) => property.project_id === projectId)
-      .toSorted((a, b) => a.sort_order - b.sort_order);
+    return (
+      Object.values(this.propertyMap)
+        .filter((property) => property.project_id === projectId)
+        // eslint-disable-next-line unicorn/no-array-sort
+        .sort((a, b) => a.sort_order - b.sort_order)
+    );
   });
 
   getIssueTypeById = computedFn((typeId: string) => this.typeMap[typeId]);

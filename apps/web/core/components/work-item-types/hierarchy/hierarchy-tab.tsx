@@ -37,7 +37,8 @@ export const HierarchyTab = observer(function HierarchyTab(props: Props) {
   }, {});
   const levels = Object.keys(groupedByLevel)
     .map(Number)
-    .toSorted((a, b) => b - a);
+    // eslint-disable-next-line unicorn/no-array-sort
+    .sort((a, b) => b - a);
 
   return (
     <div className="flex flex-col gap-3">

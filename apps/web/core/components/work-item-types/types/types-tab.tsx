@@ -46,7 +46,8 @@ export const TypesTab = observer(function TypesTab(props: Props) {
       const matchesActive = type.is_active ? showActive : showInactive;
       return matchesQuery && matchesActive;
     });
-    return result.toSorted((a, b) => (sortAscending ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)));
+    // eslint-disable-next-line unicorn/no-array-sort
+    return result.sort((a, b) => (sortAscending ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)));
   }, [types, query, showActive, showInactive, sortAscending]);
 
   const handleSubmit = async (data: Partial<TIssueType>) => {
