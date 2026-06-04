@@ -34,7 +34,7 @@ export const IssueTypeSwitcher = observer(function IssueTypeSwitcher(props: TIss
   const {
     issue: { getIssueById, updateIssue },
   } = useIssueDetail();
-  const { fetchedMap, fetchAll, getIssueTypeById } = useIssueTypes();
+  const { fetchedMap, fetchAll, getProjectIssueTypes } = useIssueTypes();
   // states
   const [isEditOpen, setIsEditOpen] = useState(false);
   // derived values
@@ -50,7 +50,12 @@ export const IssueTypeSwitcher = observer(function IssueTypeSwitcher(props: TIss
 
   if (!issue || !projectId) return <></>;
 
-  const issueType = issue.type_id ? getIssueTypeById(issue.type_id) : undefined;
+  // Resolve the type; fall back to the project's default type (Task) so untyped
+  // work items still show an (editable) type tag.
+  const projectTypes = getProjectIssueTypes(projectId);
+  const issueType =
+    (issue.type_id ? projectTypes.find((type) => type.id === issue.type_id) : undefined) ??
+    projectTypes.find((type) => type.is_default);
   // the type's configured colour (set in work item types) drives the tag styling
   const typeColor = issueType?.logo_props?.icon?.color;
 
