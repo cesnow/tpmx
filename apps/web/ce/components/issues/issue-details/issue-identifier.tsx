@@ -34,7 +34,7 @@ export const IssueIdentifier = observer(function IssueIdentifier(props: TIssueId
   const {
     issue: { getIssueById },
   } = useIssueDetail();
-  const { fetchedMap, fetchAll, getIssueTypeById } = useIssueTypes();
+  const { fetchedMap, fetchAll, getProjectIssueTypes } = useIssueTypes();
   // Determine if the component is using store data or not
   const isUsingStoreData = "issueId" in props;
   // derived values
@@ -55,7 +55,12 @@ export const IssueIdentifier = observer(function IssueIdentifier(props: TIssueId
 
   if (!shouldRenderIssueID) return null;
 
-  const issueType = showIssueTypeIcon && issueTypeId ? getIssueTypeById(issueTypeId) : undefined;
+  // Resolve the work item type for the icon. Falls back to the project's
+  // default type (e.g. Task) when the item has no type set.
+  const projectTypes = showIssueTypeIcon ? getProjectIssueTypes(projectId) : [];
+  const issueType =
+    (issueTypeId ? projectTypes.find((type) => type.id === issueTypeId) : undefined) ??
+    projectTypes.find((type) => type.is_default);
 
   return (
     <div className="flex shrink-0 items-center gap-1.5">
