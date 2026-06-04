@@ -112,9 +112,14 @@ export class IssueTypeStore implements IIssueTypeStore {
     );
   });
 
-  getIssueTypeById = computedFn((typeId: string) => this.typeMap[typeId]);
+  // Reads via Object.values so the lookup tracks key additions (mobx does not
+  // track reads of a not-yet-existing key, which otherwise prevents re-render
+  // once the types are fetched asynchronously).
+  getIssueTypeById = computedFn((typeId: string) => Object.values(this.typeMap).find((type) => type.id === typeId));
 
-  getPropertyById = computedFn((propertyId: string) => this.propertyMap[propertyId]);
+  getPropertyById = computedFn((propertyId: string) =>
+    Object.values(this.propertyMap).find((property) => property.id === propertyId)
+  );
 
   getPropertyIdsByTypeId = computedFn((typeId: string) =>
     this.typePropertyLinks.filter((link) => link.issue_type === typeId).map((link) => link.property)
