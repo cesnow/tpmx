@@ -9,13 +9,7 @@ import { useParams } from "next/navigation";
 // icons
 import { Circle } from "lucide-react";
 // plane imports
-import {
-  EUserPermissions,
-  EUserPermissionsLevel,
-  SPACE_BASE_PATH,
-  SPACE_BASE_URL,
-  WORK_ITEM_TRACKER_ELEMENTS,
-} from "@plane/constants";
+import { EUserPermissions, EUserPermissionsLevel, WORK_ITEM_TRACKER_ELEMENTS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Button } from "@plane/propel/button";
 import { NewTabIcon, WorkItemsIcon } from "@plane/propel/icons";
@@ -55,8 +49,7 @@ export const IssuesHeader = observer(function IssuesHeader() {
   const { allowPermissions } = useUserPermissions();
   const { isMobile } = usePlatformOS();
 
-  const SPACE_APP_URL = (SPACE_BASE_URL.trim() === "" ? window.location.origin : SPACE_BASE_URL) + SPACE_BASE_PATH;
-  const publishedURL = `${SPACE_APP_URL}/issues/${currentProjectDetails?.anchor}`;
+  const publishedURL = `${window.location.origin}/issues/${currentProjectDetails?.anchor}`;
 
   const issuesCount = getGroupIssueCount(undefined, undefined, false);
   const canUserCreateIssue = allowPermissions(
