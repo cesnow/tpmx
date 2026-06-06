@@ -2,7 +2,6 @@ packages:
 - apps/*
 - packages/*
 - "!apps/api"
-- "!apps/proxy"
 
 catalog:
   "@atlaskit/pragmatic-drag-and-drop-auto-scroll": 1.4.0
