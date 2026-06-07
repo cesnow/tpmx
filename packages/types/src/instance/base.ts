@@ -58,7 +58,6 @@ export interface IInstanceConfig {
   file_size_limit: number | undefined;
   is_smtp_configured: boolean;
   app_base_url: string | undefined;
-  space_base_url: string | undefined;
   admin_base_url: string | undefined;
   is_self_managed: boolean;
   instance_changelog_url?: string;

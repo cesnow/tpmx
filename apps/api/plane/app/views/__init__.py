@@ -7,7 +7,6 @@ from .project.base import (
     ProjectIdentifierEndpoint,
     ProjectUserViewsEndpoint,
     ProjectFavoritesViewSet,
-    DeployBoardViewSet,
     ProjectArchiveUnarchiveEndpoint,
 )
 

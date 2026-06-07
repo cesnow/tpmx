@@ -44,18 +44,7 @@ def base_host(
 
     # Space redirection
     if is_space:
-        space_base_path = getattr(settings, "SPACE_BASE_PATH", None)
-        if not isinstance(space_base_path, str):
-            space_base_path = "/spaces/"
-        if not space_base_path.startswith("/"):
-            space_base_path = "/" + space_base_path
-        if not space_base_path.endswith("/"):
-            space_base_path += "/"
-
-        if settings.SPACE_BASE_URL:
-            return settings.SPACE_BASE_URL + space_base_path
-        else:
-            return base_origin + space_base_path
+        return base_origin + "/spaces/"
 
     # App Redirection
     if is_app:

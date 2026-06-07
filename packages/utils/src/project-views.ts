@@ -95,14 +95,3 @@ export const getValidatedViewFilters = (data: Partial<IProjectView>) => {
 
   return data;
 };
-
-/**
- * returns published view link
- * @param anchor
- * @returns
- */
-export const getPublishViewLink = (anchor: string | undefined) => {
-  if (!anchor) return;
-
-  return `${window.location.origin}/views/${anchor}`;
-};

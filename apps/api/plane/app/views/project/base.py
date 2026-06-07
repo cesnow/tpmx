@@ -18,7 +18,6 @@ from rest_framework.response import Response
 # Module imports
 from plane.app.permissions import ROLE, ProjectMemberPermission, allow_permission
 from plane.app.serializers import (
-    DeployBoardSerializer,
     ProjectListSerializer,
     ProjectSerializer,
 )
@@ -539,47 +538,3 @@ class ProjectFavoritesViewSet(BaseViewSet):
         )
         project_favorite.delete(soft=False)
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class DeployBoardViewSet(BaseViewSet):
-    permission_classes = [ProjectMemberPermission]
-    serializer_class = DeployBoardSerializer
-    model = DeployBoard
-
-    def list(self, request, slug, project_id):
-        project_deploy_board = DeployBoard.objects.filter(
-            entity_name="project", entity_identifier=project_id, workspace__slug=slug
-        ).first()
-
-        serializer = DeployBoardSerializer(project_deploy_board)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def create(self, request, slug, project_id):
-        comments = request.data.get("is_comments_enabled", False)
-        reactions = request.data.get("is_reactions_enabled", False)
-        intake = request.data.get("intake", None)
-        votes = request.data.get("is_votes_enabled", False)
-        views = request.data.get(
-            "views",
-            {
-                "list": True,
-                "kanban": True,
-                "calendar": True,
-                "gantt": True,
-                "spreadsheet": True,
-            },
-        )
-
-        project_deploy_board, _ = DeployBoard.objects.get_or_create(
-            entity_name="project", entity_identifier=project_id, project_id=project_id
-        )
-        project_deploy_board.intake = intake
-        project_deploy_board.view_props = views
-        project_deploy_board.is_votes_enabled = votes
-        project_deploy_board.is_comments_enabled = comments
-        project_deploy_board.is_reactions_enabled = reactions
-
-        project_deploy_board.save()
-
-        serializer = DeployBoardSerializer(project_deploy_board)
-        return Response(serializer.data, status=status.HTTP_200_OK)
