@@ -332,8 +332,6 @@ CELERY_IMPORTS = (
 
 FILE_SIZE_LIMIT = int(os.environ.get("FILE_SIZE_LIMIT", 5242880))
 
-# Unsplash Access key
-UNSPLASH_ACCESS_KEY = os.environ.get("UNSPLASH_ACCESS_KEY")
 # Github Access Token
 GITHUB_ACCESS_TOKEN = os.environ.get("GITHUB_ACCESS_TOKEN", False)
 
@@ -377,12 +375,6 @@ ADMIN_BASE_URL = os.environ.get("ADMIN_BASE_URL", None)
 if ADMIN_BASE_URL and not is_valid_url(ADMIN_BASE_URL):
     ADMIN_BASE_URL = None
 ADMIN_BASE_PATH = os.environ.get("ADMIN_BASE_PATH", "/god-mode/")
-
-# Space Base URL
-SPACE_BASE_URL = os.environ.get("SPACE_BASE_URL", None)
-if SPACE_BASE_URL and not is_valid_url(SPACE_BASE_URL):
-    SPACE_BASE_URL = None
-SPACE_BASE_PATH = os.environ.get("SPACE_BASE_PATH", "/spaces/")
 
 # App Base URL
 APP_BASE_URL = os.environ.get("APP_BASE_URL", None)

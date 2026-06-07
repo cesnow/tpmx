@@ -100,10 +100,6 @@ def get_allowed_hosts() -> list[str]:
         # Get only the host
         host = urlparse(settings.ADMIN_BASE_URL).netloc
         allowed_hosts.append(host)
-    if settings.SPACE_BASE_URL:
-        # Get only the host
-        host = urlparse(settings.SPACE_BASE_URL).netloc
-        allowed_hosts.append(host)
     return allowed_hosts
 
 

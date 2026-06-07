@@ -7,7 +7,6 @@ from .project.base import (
     ProjectIdentifierEndpoint,
     ProjectUserViewsEndpoint,
     ProjectFavoritesViewSet,
-    DeployBoardViewSet,
     ProjectArchiveUnarchiveEndpoint,
 )
 
@@ -84,6 +83,12 @@ from .workspace.quick_link import QuickLinkViewSet
 from .workspace.sticky import WorkspaceStickyViewSet
 
 from .state.base import StateViewSet, IntakeStateEndpoint
+from .issue_type import (
+    IssueTypeViewSet,
+    IssuePropertyViewSet,
+    IssueTypePropertyEndpoint,
+    IssuePropertyOptionViewSet,
+)
 from .view.base import (
     WorkspaceViewViewSet,
     WorkspaceViewIssuesViewSet,
@@ -181,7 +186,6 @@ from .search.issue import IssueSearchEndpoint
 
 from .external.base import (
     GPTIntegrationEndpoint,
-    UnsplashEndpoint,
     WorkspaceGPTIntegrationEndpoint,
 )
 from .estimate.base import (

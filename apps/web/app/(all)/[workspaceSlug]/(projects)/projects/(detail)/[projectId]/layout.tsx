@@ -6,6 +6,7 @@
 
 import { observer } from "mobx-react";
 import { Outlet } from "react-router";
+import useSWR from "swr";
 // plane imports
 import { Header, Row } from "@plane/ui";
 import { cn } from "@plane/utils";
@@ -14,6 +15,7 @@ import { TabNavigationRoot } from "@/components/navigation/tab-navigation-root";
 import { AppSidebarToggleButton } from "@/components/sidebar/sidebar-toggle-button";
 // hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
+import { useIssueTypes } from "@/hooks/store/use-issue-types";
 import { useProjectNavigationPreferences } from "@/hooks/use-navigation-preferences";
 // layouts
 import { ProjectAuthWrapper } from "@/layouts/auth-layout/project-wrapper";
@@ -25,8 +27,16 @@ function ProjectLayout({ params }: Route.ComponentProps) {
   const { workspaceSlug, projectId } = params;
   // store hooks
   const { sidebarCollapsed } = useAppTheme();
+  const { fetchedMap, fetchAll } = useIssueTypes();
   // preferences
   const { preferences: projectPreferences } = useProjectNavigationPreferences();
+
+  // preload the project's work item types so their icons render across views
+  useSWR(
+    workspaceSlug && projectId && !fetchedMap[projectId] ? `WORK_ITEM_TYPES_${workspaceSlug}_${projectId}` : null,
+    workspaceSlug && projectId ? () => fetchAll(workspaceSlug, projectId) : null,
+    { revalidateOnFocus: false }
+  );
 
   return (
     <>

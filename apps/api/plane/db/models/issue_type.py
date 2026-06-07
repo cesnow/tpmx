@@ -13,6 +13,14 @@ from .base import BaseModel
 
 class IssueType(BaseModel):
     workspace = models.ForeignKey("db.Workspace", related_name="issue_types", on_delete=models.CASCADE)
+    # Project scope for the work item type. Null types are workspace-wide.
+    project = models.ForeignKey(
+        "db.Project",
+        related_name="project_issue_types_fk",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     logo_props = models.JSONField(default=dict)

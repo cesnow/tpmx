@@ -57,7 +57,6 @@ class InstanceEndpoint(BaseAPIView):
             SLACK_CLIENT_ID,
             POSTHOG_API_KEY,
             POSTHOG_HOST,
-            UNSPLASH_ACCESS_KEY,
             LLM_API_KEY,
         ) = get_configuration_value(
             [
@@ -95,10 +94,6 @@ class InstanceEndpoint(BaseAPIView):
                     "default": os.environ.get("POSTHOG_HOST", None),
                 },
                 {
-                    "key": "UNSPLASH_ACCESS_KEY",
-                    "default": os.environ.get("UNSPLASH_ACCESS_KEY", ""),
-                },
-                {
                     "key": "LLM_API_KEY",
                     "default": os.environ.get("LLM_API_KEY", ""),
                 },
@@ -122,9 +117,6 @@ class InstanceEndpoint(BaseAPIView):
         data["posthog_api_key"] = POSTHOG_API_KEY
         data["posthog_host"] = POSTHOG_HOST
 
-        # Unsplash
-        data["has_unsplash_configured"] = bool(UNSPLASH_ACCESS_KEY)
-
         # Open AI settings
         data["has_llm_configured"] = bool(LLM_API_KEY)
 
@@ -136,7 +128,6 @@ class InstanceEndpoint(BaseAPIView):
 
         # Base URL
         data["admin_base_url"] = settings.ADMIN_BASE_URL
-        data["space_base_url"] = settings.SPACE_BASE_URL
         data["app_base_url"] = settings.APP_BASE_URL
 
         data["instance_changelog_url"] = settings.INSTANCE_CHANGELOG_URL

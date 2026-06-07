@@ -1,0 +1,36 @@
+ARG PYTHON_VERSION=3.14.5
+FROM python:${PYTHON_VERSION}-alpine
+
+# environment
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# patch system packages for security
+RUN apk update
+
+# runtime libraries shared by every API image
+RUN apk add --no-cache --upgrade \
+    "ca-certificates" \
+    "libpq" \
+    "libxslt" \
+    "openssl" \
+    "xmlsec"
+
+# Build toolchain kept available so downstream images can compile native
+# Python wheels (psycopg, xmlsec, cryptography, ...) when they install their
+# own requirements.
+#
+# Requirements and application code are intentionally NOT copied/installed here,
+# so they can change without rebuilding this base image.
+RUN apk add --no-cache \
+    "bash" \
+    "cargo" \
+    "libffi-dev" \
+    "g++" \
+    "gcc" \
+    "libc-dev" \
+    "linux-headers" \
+    "make" \
+    "postgresql-dev" \
+    && rm -rf /var/cache/apk/*

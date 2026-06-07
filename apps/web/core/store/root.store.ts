@@ -37,6 +37,8 @@ import type { IGlobalViewStore } from "./global-view.store";
 import { GlobalViewStore } from "./global-view.store";
 import type { IProjectInboxStore } from "./inbox/project-inbox.store";
 import { ProjectInboxStore } from "./inbox/project-inbox.store";
+import type { IIssueTypeStore } from "./issue-types/issue-type.store";
+import { IssueTypeStore } from "./issue-types/issue-type.store";
 import type { IInstanceStore } from "./instance.store";
 import { InstanceStore } from "./instance.store";
 import type { IIssueRootStore } from "./issue/root.store";
@@ -84,6 +86,7 @@ export class CoreRootStore {
   issue: IIssueRootStore;
   state: IStateStore;
   label: ILabelStore;
+  issueTypes: IIssueTypeStore;
   dashboard: IDashboardStore;
   analytics: IAnalyticsStore;
   projectPages: IProjectPageStore;
@@ -120,6 +123,7 @@ export class CoreRootStore {
     this.issue = new IssueRootStore(this as unknown as RootStore);
     this.state = new StateStore(this as unknown as RootStore);
     this.label = new LabelStore(this);
+    this.issueTypes = new IssueTypeStore(this);
     this.dashboard = new DashboardStore(this);
     this.multipleSelect = new MultipleSelectStore();
     this.projectInbox = new ProjectInboxStore(this);
@@ -154,6 +158,7 @@ export class CoreRootStore {
     this.issue = new IssueRootStore(this as unknown as RootStore);
     this.state = new StateStore(this as unknown as RootStore);
     this.label = new LabelStore(this);
+    this.issueTypes = new IssueTypeStore(this);
     this.dashboard = new DashboardStore(this);
     this.projectInbox = new ProjectInboxStore(this);
     this.projectPages = new ProjectPageStore(this as unknown as RootStore);
