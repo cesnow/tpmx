@@ -14,12 +14,14 @@ import type { ElementDragPayload } from "@atlaskit/pragmatic-drag-and-drop/eleme
 import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { pointerOutsideOfPreview } from "@atlaskit/pragmatic-drag-and-drop/element/pointer-outside-of-preview";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
-import { attachInstruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item";
+import { attachClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { observer } from "mobx-react";
 import { usePathname } from "next/navigation";
 import { createRoot } from "react-dom/client";
 // plane types
 import type { InstructionType } from "@plane/types";
+// plane utils
+import { cn } from "@plane/utils";
 // components
 import { StickyNote } from "../sticky";
 // helpers
@@ -28,7 +30,6 @@ import { getInstructionFromPayload } from "./sticky.helpers";
 type Props = {
   stickyId: string;
   workspaceSlug: string;
-  itemWidth: string;
   isLastChild: boolean;
   isInFirstRow: boolean;
   isInLastRow: boolean;
@@ -37,10 +38,10 @@ type Props = {
 };
 
 export const StickyDNDWrapper = observer(function StickyDNDWrapper(props: Props) {
-  const { stickyId, workspaceSlug, itemWidth, isLastChild, handleDrop, handleLayout } = props;
+  const { stickyId, workspaceSlug, handleDrop, handleLayout } = props;
   // states
   const [isDragging, setIsDragging] = useState(false);
-  const [_instruction, setInstruction] = useState<InstructionType | undefined>(undefined);
+  const [instruction, setInstruction] = useState<InstructionType | undefined>(undefined);
   // refs
   const elementRef = useRef<HTMLDivElement>(null);
   // navigation
@@ -90,24 +91,17 @@ export const StickyDNDWrapper = observer(function StickyDNDWrapper(props: Props)
         dropTargetForElements({
           element,
           canDrop: ({ source }) => source.data?.type === "sticky",
-          getData: ({ input, element }) => {
-            const blockedStates: InstructionType[] = ["make-child"];
-            if (!isLastChild) {
-              blockedStates.push("reorder-below");
-            }
-
-            return attachInstruction(initialData, {
+          // The stickies are laid out in a horizontal grid, so the reorder axis is
+          // left/right (not top/bottom). Left edge = insert before, right = after.
+          getData: ({ input, element: dropElement }) =>
+            attachClosestEdge(initialData, {
               input,
-              element,
-              currentLevel: 1,
-              indentPerLevel: 0,
-              mode: isLastChild ? "last-in-group" : "standard",
-              block: blockedStates,
-            });
-          },
+              element: dropElement,
+              allowedEdges: ["left", "right"],
+            }),
           onDrag: ({ self, source, location }) => {
-            const instruction = getInstructionFromPayload(self, source, location);
-            setInstruction(instruction);
+            const nextInstruction = getInstructionFromPayload(self, source, location);
+            setInstruction(nextInstruction);
           },
           onDragLeave: () => {
             setInstruction(undefined);
@@ -118,23 +112,30 @@ export const StickyDNDWrapper = observer(function StickyDNDWrapper(props: Props)
           },
         })
       );
-  }, [handleDrop, isDragging, isLastChild, pathname, stickyId, workspaceSlug]);
+  }, [handleDrop, isDragging, pathname, stickyId, workspaceSlug]);
 
   return (
     <div
-      className="box-border flex flex-col p-[8px]"
-      style={{
-        width: itemWidth,
-      }}
+      ref={elementRef}
+      className={cn("relative box-border flex w-full cursor-grab flex-col transition duration-200", {
+        // dim + shrink the card that is being dragged
+        "scale-95 opacity-40": isDragging,
+      })}
     >
-      {/* {!isInFirstRow && <DropIndicator isVisible={instruction === "reorder-above"} />} */}
+      {/* insert-before indicator (sits in the left grid gap) */}
+      {instruction === "reorder-above" && (
+        <span className="absolute top-0 -left-2 z-10 h-full w-[3px] -translate-x-1/2 rounded-full bg-accent-primary" />
+      )}
       <StickyNote
         key={stickyId || "new"}
         workspaceSlug={workspaceSlug}
         stickyId={stickyId}
         handleLayout={handleLayout}
       />
-      {/* {!isInLastRow && <DropIndicator isVisible={instruction === "reorder-below"} />} */}
+      {/* insert-after indicator (sits in the right grid gap) */}
+      {instruction === "reorder-below" && (
+        <span className="absolute top-0 -right-2 z-10 h-full w-[3px] translate-x-1/2 rounded-full bg-accent-primary" />
+      )}
     </div>
   );
 });

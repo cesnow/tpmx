@@ -13,8 +13,6 @@ import type { ElementDragPayload } from "@atlaskit/pragmatic-drag-and-drop/eleme
 import { observer } from "mobx-react";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import Masonry from "react-masonry-component";
-
 // plane imports
 import { EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -47,6 +45,20 @@ type TProps = TStickiesLayout & {
   columnCount: number;
 };
 
+// The grid is laid out in normal flow (no absolute positioning), so it reflows
+// automatically and there is nothing to relayout imperatively.
+const handleLayout = () => {};
+
+const getColumnCount = (width: number | null): number => {
+  if (width === null) return 4;
+
+  if (width < 640) return 2; // sm
+  if (width < 850) return 3; // md
+  if (width < 1024) return 4; // lg
+  if (width < 1280) return 5; // xl
+  return 6; // 2xl and above
+};
+
 export const StickiesList = observer(function StickiesList(props: TProps) {
   const { workspaceSlug, intersectionElement, columnCount } = props;
   // navigation
@@ -62,7 +74,6 @@ export const StickiesList = observer(function StickiesList(props: TProps) {
   const { stickyOperations } = useStickyOperations({ workspaceSlug: workspaceSlug?.toString() });
   // derived values
   const workspaceStickyIds = getWorkspaceStickyIds(workspaceSlug?.toString());
-  const itemWidth = `${100 / columnCount}%`;
   const totalRows = Math.ceil(workspaceStickyIds.length / columnCount);
   const isStickiesPage = pathname?.includes("stickies");
   const hasGuestLevelPermissions = allowPermissions(
@@ -71,14 +82,6 @@ export const StickiesList = observer(function StickiesList(props: TProps) {
   );
   const stickiesResolvedPath = resolvedTheme === "light" ? lightStickiesAsset : darkStickiesAsset;
   const stickiesSearchResolvedPath = resolvedTheme === "light" ? lightStickiesSearchAsset : darkStickiesSearchAsset;
-  const masonryRef = useRef<any>(null);
-
-  const handleLayout = () => {
-    if (masonryRef.current) {
-      // Force reflow
-      masonryRef.current.performLayout();
-    }
-  };
 
   // Function to determine if an item is in first or last row
   const getRowPositions = (index: number) => {
@@ -147,28 +150,30 @@ export const StickiesList = observer(function StickiesList(props: TProps) {
     );
   }
 
+  // Normal-flow CSS grid: items flow left-to-right and wrap. Because nothing is
+  // absolutely positioned, gap and the surrounding ContentWrapper padding all
+  // behave normally.
   return (
-    <div className="transition-opacity duration-300 ease-in-out">
-      {/* @ts-expect-error type mismatch here */}
-      <Masonry elementType="div" ref={masonryRef}>
-        {workspaceStickyIds.map((stickyId, index) => {
-          const { isInFirstRow, isInLastRow } = getRowPositions(index);
-          return (
-            <StickyDNDWrapper
-              key={stickyId}
-              stickyId={stickyId}
-              workspaceSlug={workspaceSlug.toString()}
-              itemWidth={itemWidth}
-              handleDrop={handleDrop}
-              isLastChild={index === workspaceStickyIds.length - 1}
-              isInFirstRow={isInFirstRow}
-              isInLastRow={isInLastRow}
-              handleLayout={handleLayout}
-            />
-          );
-        })}
-        {intersectionElement && <div style={{ width: itemWidth }}>{intersectionElement}</div>}
-      </Masonry>
+    <div
+      className="grid gap-4 transition-opacity duration-300 ease-in-out"
+      style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
+    >
+      {workspaceStickyIds.map((stickyId, index) => {
+        const { isInFirstRow, isInLastRow } = getRowPositions(index);
+        return (
+          <StickyDNDWrapper
+            key={stickyId}
+            stickyId={stickyId}
+            workspaceSlug={workspaceSlug.toString()}
+            handleDrop={handleDrop}
+            isLastChild={index === workspaceStickyIds.length - 1}
+            isInFirstRow={isInFirstRow}
+            isInLastRow={isInLastRow}
+            handleLayout={handleLayout}
+          />
+        );
+      })}
+      {intersectionElement && <div>{intersectionElement}</div>}
     </div>
   );
 });
@@ -194,15 +199,6 @@ export function StickiesLayout(props: TStickiesLayout) {
     return () => resizeObserver.disconnect();
   }, []);
 
-  const getColumnCount = (width: number | null): number => {
-    if (width === null) return 4;
-
-    if (width < 640) return 2; // sm
-    if (width < 850) return 3; // md
-    if (width < 1024) return 4; // lg
-    if (width < 1280) return 5; // xl
-    return 6; // 2xl and above
-  };
   const columnCount = getColumnCount(containerWidth);
 
   return (

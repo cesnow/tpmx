@@ -205,7 +205,7 @@ export class StickyStore implements IStickyStore {
     } catch (error) {
       console.error("Error in updating sticky:", error);
       this.stickies[id] = sticky;
-      throw new Error();
+      throw new Error("", { cause: error });
     }
   };
 
@@ -243,16 +243,26 @@ export class StickyStore implements IStickyStore {
       if (destinationSequence) {
         const destinationIndex = sortedStickies.findIndex((id) => id === destinationId);
 
+        // Display order is `sort_order` descending, so the item to the left of the
+        // destination has a higher sort_order and the item to the right a lower one.
         if (edge === "reorder-above") {
+          // insert before (to the left of) the destination
           const prevSequence = this.stickies[sortedStickies[destinationIndex - 1]]?.sort_order || undefined;
           if (prevSequence) {
             resultSequence = (destinationSequence + prevSequence) / 2;
           } else {
+            // destination is the first item -> place above it
             resultSequence = destinationSequence + resultSequence;
           }
         } else {
-          // reorder-below
-          resultSequence = destinationSequence - resultSequence;
+          // reorder-below: insert after (to the right of) the destination
+          const nextSequence = this.stickies[sortedStickies[destinationIndex + 1]]?.sort_order || undefined;
+          if (nextSequence) {
+            resultSequence = (destinationSequence + nextSequence) / 2;
+          } else {
+            // destination is the last item -> place below it
+            resultSequence = destinationSequence - resultSequence;
+          }
         }
       }
 
