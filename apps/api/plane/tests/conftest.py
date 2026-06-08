@@ -9,6 +9,58 @@ from pytest_django.fixtures import django_db_setup
 from plane.db.models import User, Workspace, WorkspaceMember
 from plane.db.models.api import APIToken
 
+# Make the external-service mock fixtures available to every test. pytest 9 no
+# longer allows `pytest_plugins` in a non-top-level conftest, so importing the
+# fixtures here registers them instead.
+from plane.tests.conftest_external import (  # noqa: E402, F401
+    mock_celery,
+    mock_elasticsearch,
+    mock_mongodb,
+    mock_redis,
+)
+
+
+def pytest_collection_modifyitems(config, items):
+    """Skip DB-backed tests when no real database is available.
+
+    Plane's models use Postgres-specific SQL, so the schema cannot be built on
+    SQLite. When the configured DB is SQLite (the no-Postgres mode), skip every
+    test that touches the ORM instead of letting it error. Point the test DB at a
+    real Postgres (e.g. unset the SQLite override / set DATABASE_URL) and these
+    same tests run normally.
+    """
+    from django.conf import settings
+
+    engine = settings.DATABASES.get("default", {}).get("ENGINE", "")
+    if "sqlite" not in engine:
+        return
+
+    skip_db = pytest.mark.skip(reason="No Postgres available: SQLite cannot build Plane's schema")
+    # `live_server`/`plane_server` request `transactional_db` dynamically at runtime,
+    # so match the live-server fixtures directly too.
+    db_fixtures = {
+        "db",
+        "transactional_db",
+        "django_db_reset_sequences",
+        "live_server",
+        "plane_server",
+    }
+    for item in items:
+        if item.get_closest_marker("django_db") or db_fixtures & set(getattr(item, "fixturenames", ())):
+            item.add_marker(skip_db)
+
+
+@pytest.fixture(autouse=True)
+def _auto_mock_redis(mock_redis):  # noqa: F811
+    """Patch Redis for every test so a real Redis server is never required."""
+    return mock_redis
+
+
+@pytest.fixture(autouse=True)
+def _auto_mock_celery(mock_celery):  # noqa: F811
+    """Patch Celery for every test so a real Celery server is never required."""
+    return mock_celery
+
 
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup):  # noqa: F811
