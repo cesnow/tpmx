@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Release.Namespace }}
-  name: {{ .Release.Name }}-live
+  namespace: twsss
+  name: pmxp-live
   labels:
-    app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-live
+    app.name: twsss-pmxp-live
 spec:
   {{- if not .Values.live.assign_cluster_ip }}
   clusterIP: None
@@ -16,33 +16,33 @@ spec:
     protocol: TCP
     targetPort: 3000
   selector:
-    app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-live
+    app.name: twsss-pmxp-live
 
 ---
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Release.Namespace }}
-  name: {{ .Release.Name }}-live-wl
+  namespace: twsss
+  name: pmxp-live-wl
   {{- template "plane.labelsAndAnnotations" .Values.live }}
 spec:
   replicas: {{ .Values.live.replicas | default 1 }}
   selector:
     matchLabels:
-      app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-live
+      app.name: twsss-pmxp-live
   template:
     metadata:
-      namespace: {{ .Release.Namespace }}
+      namespace: twsss
       labels:
-        app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-live
+        app.name: twsss-pmxp-live
       annotations:
         timestamp: {{ now | quote }}
     spec:
       containers:
-      - name: {{ .Release.Name }}-live
+      - name: pmxp-live
         imagePullPolicy: {{ .Values.live.pullPolicy | default "Always" }}
-        image: {{ .Values.live.image | default "artifacts.plane.so/makeplane/plane-live" }}:{{ .Values.planeVersion }}
+        image: {{ .Values.live.image }}
         stdin: true
         tty: true
         resources:
@@ -54,12 +54,12 @@ spec:
             cpu: {{ .Values.live.cpuLimit | default "500m" | quote}}
         envFrom:
           - configMapRef:
-              name: {{ .Release.Name }}-live-vars
+              name: pmxp-live-vars
               optional: false
           - secretRef:
-              name: {{ if not (empty .Values.external_secrets.live_env_existingSecret) }}{{ .Values.external_secrets.live_env_existingSecret }}{{ else }}{{ .Release.Name }}-live-secrets{{ end }}
+              name: {{ .Values.external_secrets.vault_name }}
               optional: false
       {{- include "plane.podScheduling" .Values.live }}
-      serviceAccount: {{ .Release.Name }}-srv-account
-      serviceAccountName: {{ .Release.Name }}-srv-account
+      serviceAccount: pmxp-srv-account
+      serviceAccountName: pmxp-srv-account
 ---

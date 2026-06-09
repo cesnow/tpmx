@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ .Release.Namespace }}
-  name: {{ .Release.Name }}-api
+  namespace: twsss
+  name: pmxp-api
   labels:
-    app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-api
+    app.name: twsss-pmxp-api
 spec:
   {{- if not .Values.api.assign_cluster_ip }}
   clusterIP: None
@@ -16,33 +16,33 @@ spec:
     protocol: TCP
     targetPort: 8000
   selector:
-    app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-api
+    app.name: twsss-pmxp-api
 
 ---
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Release.Namespace }}
-  name: {{ .Release.Name }}-api-wl
+  namespace: twsss
+  name: pmxp-api-wl
   {{- template "plane.labelsAndAnnotations" .Values.api }}
 spec:
   replicas: {{ .Values.api.replicas | default 1}}
   selector:
     matchLabels:
-      app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-api
+      app.name: twsss-pmxp-api
   template:
     metadata:
-      namespace: {{ .Release.Namespace }}
+      namespace: twsss
       labels:
-        app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-api
+        app.name: twsss-pmxp-api
       annotations:
         timestamp: {{ now | quote }}
     spec:
       containers:
-      - name: {{ .Release.Name }}-api
+      - name: pmxp-api
         imagePullPolicy: {{ .Values.api.pullPolicy | default "Always" }}
-        image: {{ .Values.api.image | default "artifacts.plane.so/makeplane/plane-backend" }}:{{ .Values.planeVersion }}
+        image: {{ .Values.api.image }}
         stdin: true
         tty: true
         resources:
@@ -56,13 +56,10 @@ spec:
           - ./bin/docker-entrypoint-api.sh
         envFrom:
           - configMapRef:
-              name: {{ .Release.Name }}-app-vars
+              name: pmxp-app-vars
               optional: false
           - secretRef:
-              name: {{ if not (empty .Values.external_secrets.app_env_existingSecret) }}{{ .Values.external_secrets.app_env_existingSecret }}{{ else }}{{ .Release.Name }}-app-secrets{{ end }}
-              optional: false
-          - secretRef:
-              name: {{ if not (empty .Values.external_secrets.doc_store_existingSecret) }}{{ .Values.external_secrets.doc_store_existingSecret }}{{ else }}{{ .Release.Name }}-doc-store-secrets{{ end }}
+              name: {{ .Values.external_secrets.vault_name }}
               optional: false
         readinessProbe:
           failureThreshold: 30
@@ -75,6 +72,6 @@ spec:
           timeoutSeconds: 1
 
       {{- include "plane.podScheduling" .Values.api }}
-      serviceAccount: {{ .Release.Name }}-srv-account
-      serviceAccountName: {{ .Release.Name }}-srv-account
+      serviceAccount: pmxp-srv-account
+      serviceAccountName: pmxp-srv-account
 ---

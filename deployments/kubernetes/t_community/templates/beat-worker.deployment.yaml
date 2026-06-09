@@ -1,26 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Release.Namespace }}
-  name: {{ .Release.Name }}-beat-worker-wl
+  namespace: twsss
+  name: pmxp-beat-worker-wl
   {{- template "plane.labelsAndAnnotations" .Values.beatworker }}
 spec:
   replicas: {{ .Values.beatworker.replicas | default 1 }}
   selector:
     matchLabels:
-      app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-beat-worker
+      app.name: twsss-pmxp-beat-worker
   template:
     metadata:
-      namespace: {{ .Release.Namespace }}
+      namespace: twsss
       labels:
-        app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-beat-worker
+        app.name: twsss-pmxp-beat-worker
       annotations:
         timestamp: {{ now | quote }}
     spec:
       containers:
-      - name: {{ .Release.Name }}-beat-worker
+      - name: pmxp-beat-worker
         imagePullPolicy: {{ .Values.beatworker.pullPolicy | default "Always" }}
-        image: {{ .Values.beatworker.image | default "artifacts.plane.so/makeplane/plane-backend" }}:{{ .Values.planeVersion }}
+        image: {{ .Values.beatworker.image }}
         stdin: true
         tty: true
         resources:
@@ -34,16 +34,13 @@ spec:
           - ./bin/docker-entrypoint-beat.sh
         envFrom:
           - configMapRef:
-              name: {{ .Release.Name }}-app-vars
+              name: pmxp-app-vars
               optional: false
           - secretRef:
-                name: {{ if not (empty .Values.external_secrets.app_env_existingSecret) }}{{ .Values.external_secrets.app_env_existingSecret }}{{ else }}{{ .Release.Name }}-app-secrets{{ end }}
+                name: {{ .Values.external_secrets.vault_name }}
                 optional: false
-          - secretRef:
-              name: {{ if not (empty .Values.external_secrets.doc_store_existingSecret) }}{{ .Values.external_secrets.doc_store_existingSecret }}{{ else }}{{ .Release.Name }}-doc-store-secrets{{ end }}
-              optional: false
           
       {{- include "plane.podScheduling" .Values.beatworker }}
-      serviceAccount: {{ .Release.Name }}-srv-account
-      serviceAccountName: {{ .Release.Name }}-srv-account
+      serviceAccount: pmxp-srv-account
+      serviceAccountName: pmxp-srv-account
 ---

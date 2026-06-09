@@ -1,0 +1,58 @@
+
+{{- $webHost   := .Values.env.web_url   | trimPrefix "https://" | trimPrefix "http://" | trimSuffix "/" }}
+{{- $apiHost   := .Values.env.api_url   | trimPrefix "https://" | trimPrefix "http://" | trimSuffix "/" }}
+{{- $adminHost := .Values.env.admin_url | trimPrefix "https://" | trimPrefix "http://" | trimSuffix "/" }}
+{{- $liveHost  := .Values.env.live_url  | trimPrefix "https://" | trimPrefix "http://" | trimSuffix "/" }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  namespace: twsss
+  name: pmxp-vs
+  labels:
+    app.name: twsss-pmxp-vs
+spec:
+  hosts:
+    - {{ $webHost | quote }}
+    - {{ $apiHost | quote }}
+    - {{ $adminHost | quote }}
+    - {{ $liveHost | quote }}
+  gateways:
+    - {{ .Values.istio.gateway | default "pmxp-gateway" }}
+  http:
+    - name: api
+      match:
+        - authority:
+            exact: {{ $apiHost | quote }}
+      route:
+        - destination:
+            host: pmxp-api.twsss.svc.cluster.local
+            port:
+              number: 8000
+    - name: admin
+      match:
+        - authority:
+            exact: {{ $adminHost | quote }}
+      route:
+        - destination:
+            host: pmxp-admin.twsss.svc.cluster.local
+            port:
+              number: 3000
+    - name: live
+      match:
+        - authority:
+            exact: {{ $liveHost | quote }}
+      route:
+        - destination:
+            host: pmxp-live.twsss.svc.cluster.local
+            port:
+              number: 3000
+    - name: web
+      match:
+        - authority:
+            exact: {{ $webHost | quote }}
+      route:
+        - destination:
+            host: pmxp-web.twsss.svc.cluster.local
+            port:
+              number: 3000
+---

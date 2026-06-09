@@ -1,26 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ .Release.Namespace }}
-  name: {{ .Release.Name }}-worker-wl
+  namespace: twsss
+  name: pmxp-worker-wl
   {{- template "plane.labelsAndAnnotations" .Values.worker }}
 spec:
   replicas: {{ .Values.worker.replicas | default 1 }}
   selector:
     matchLabels:
-      app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-worker
+      app.name: twsss-pmxp-worker
   template:
     metadata:
-      namespace: {{ .Release.Namespace }}
+      namespace: twsss
       labels:
-        app.name: {{ .Release.Namespace }}-{{ .Release.Name }}-worker
+        app.name: twsss-pmxp-worker
       annotations:
         timestamp: {{ now | quote }}
     spec:
       containers:
-      - name: {{ .Release.Name }}-worker
+      - name: pmxp-worker
         imagePullPolicy: {{ .Values.worker.pullPolicy | default "Always" }}
-        image: {{ .Values.worker.image | default "artifacts.plane.so/makeplane/plane-backend" }}:{{ .Values.planeVersion }}
+        image: {{ .Values.worker.image }}
         stdin: true
         tty: true
         resources:
@@ -34,15 +34,12 @@ spec:
           - ./bin/docker-entrypoint-worker.sh
         envFrom:
           - configMapRef:
-              name: {{ .Release.Name }}-app-vars
+              name: pmxp-app-vars
               optional: false
           - secretRef:
-              name: {{ if not (empty .Values.external_secrets.app_env_existingSecret) }}{{ .Values.external_secrets.app_env_existingSecret }}{{ else }}{{ .Release.Name }}-app-secrets{{ end }}
-              optional: false
-          - secretRef:
-              name: {{ if not (empty .Values.external_secrets.doc_store_existingSecret) }}{{ .Values.external_secrets.doc_store_existingSecret }}{{ else }}{{ .Release.Name }}-doc-store-secrets{{ end }}
+              name: {{ .Values.external_secrets.vault_name }}
               optional: false
       {{- include "plane.podScheduling" .Values.worker }}
-      serviceAccount: {{ .Release.Name }}-srv-account
-      serviceAccountName: {{ .Release.Name }}-srv-account
+      serviceAccount: pmxp-srv-account
+      serviceAccountName: pmxp-srv-account
 ---
