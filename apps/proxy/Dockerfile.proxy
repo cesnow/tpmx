@@ -1,0 +1,3 @@
+FROM cesnow/caddy:2.11.4-alpine
+
+COPY Caddyfile /etc/caddy/Caddyfile
