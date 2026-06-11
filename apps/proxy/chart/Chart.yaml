@@ -1,0 +1,6 @@
+apiVersion: v2
+name: plane-proxy
+description: Plane Caddy reverse-proxy fronted by Istio (TLS via cert-manager)
+type: application
+version: 0.1.0
+appVersion: "2.11.4"

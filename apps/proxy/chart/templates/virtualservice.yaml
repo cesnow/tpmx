@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: {{ include "plane-proxy.fullname" . }}
+  labels:
+    {{- include "plane-proxy.labels" . | nindent 4 }}
+spec:
+  hosts:
+    - {{ .Values.host | quote }}
+  gateways:
+    - "gateway"
+  http:
+    # Single catch-all route. Caddy (chart/files/Caddyfile) owns all path-based
+    # routing — /god-mode -> admin, /api,/auth,/static -> api, the MinIO bucket
+    # -> plane-minio, and the /* fallback -> web. Istio only hands traffic to
+    # Caddy; keep the path map in one place (the Caddyfile), not duplicated here.
+    - route:
+        - destination:
+            host: {{ include "plane-proxy.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            port:
+              number: 80

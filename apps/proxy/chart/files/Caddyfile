@@ -1,0 +1,33 @@
+# NOTE: this file is rendered through Helm `tpl` — values come from values.yaml.
+# It is intentionally NOT a standalone Caddyfile (contains Go template actions).
+(plane_proxy) {
+	request_body {
+		max_size {{ .Values.env.fileSizeLimit }}
+	}
+
+	redir /god-mode /god-mode/ permanent
+	reverse_proxy /god-mode/* {{ .Values.backends.admin }}
+
+	reverse_proxy /api/* {{ .Values.backends.api }}
+	reverse_proxy /auth/* {{ .Values.backends.api }}
+	reverse_proxy /static/* {{ .Values.backends.api }}
+
+	reverse_proxy /{{ .Values.env.bucketName }}/* {{ .Values.backends.minio }}
+	reverse_proxy /{{ .Values.env.bucketName }} {{ .Values.backends.minio }}
+
+	reverse_proxy /* {{ .Values.backends.web }}
+}
+
+{
+	# TLS terminated upstream at the Istio gateway — HTTP only here.
+	auto_https off
+	servers {
+		max_header_size 25MB
+		client_ip_headers X-Forwarded-For X-Real-IP
+		trusted_proxies static {{ .Values.env.trustedProxies }}
+	}
+}
+
+:80 {
+	import plane_proxy
+}
