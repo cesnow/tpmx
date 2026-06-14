@@ -49,28 +49,30 @@ export const HierarchyTab = observer(function HierarchyTab(props: Props) {
           directly below it.
         </p>
       </div>
-      <div className="flex flex-col gap-2 rounded-lg bg-surface-2 p-4">
+      <div className="flex flex-col gap-2 rounded-lg border border-subtle bg-surface-1 p-3">
         {levels.map((level, index) => (
           <Fragment key={level}>
-            <div className="flex items-center gap-3 rounded-lg bg-surface-1 px-4 py-3">
-              <span className="grid size-8 shrink-0 place-items-center rounded-md bg-layer-2 text-body-sm-medium text-secondary">
+            <div className="flex items-center gap-3 rounded-lg border border-subtle bg-surface-2 px-4 py-4">
+              <span className="grid size-8 shrink-0 place-items-center rounded-md border border-subtle bg-layer-2 text-body-sm-medium text-tertiary">
                 {level}
               </span>
               <div className="flex flex-wrap items-center gap-2">
                 {groupedByLevel[level].map((type) => (
                   <span
                     key={type.id}
-                    className="flex items-center gap-1.5 rounded-md bg-layer-2 py-1 pr-2 pl-1 text-body-sm-medium text-primary"
+                    className="flex items-center gap-1.5 rounded-md border border-subtle bg-layer-2 py-1.5 pr-3 pl-1.5 text-body-sm-medium text-primary"
                   >
-                    <WorkItemTypeLogo logo={type.logo_props} size={14} containerSize={22} />
+                    <WorkItemTypeLogo logo={type.logo_props} size={9} containerSize={14} className="rounded-sm" />
                     {type.name}
                   </span>
                 ))}
               </div>
             </div>
             {index < levels.length - 1 && (
-              <div className="pl-3 text-tertiary">
-                <ArrowDown className="size-4" />
+              <div className="flex pl-4 text-tertiary">
+                <div className="flex w-8 justify-center py-1">
+                  <ArrowDown className="size-5" strokeWidth={1.5} />
+                </div>
               </div>
             )}
           </Fragment>
