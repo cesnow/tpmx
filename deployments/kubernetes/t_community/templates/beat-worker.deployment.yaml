@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: twsss
+  name: pmxp-beat-worker-wl
+  {{- template "plane.labelsAndAnnotations" .Values.beatworker }}
+spec:
+  replicas: {{ .Values.beatworker.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app.name: twsss-pmxp-beat-worker
+  template:
+    metadata:
+      namespace: twsss
+      labels:
+        app.name: twsss-pmxp-beat-worker
+      annotations:
+        timestamp: {{ now | quote }}
+    spec:
+      containers:
+      - name: pmxp-beat-worker
+        imagePullPolicy: {{ .Values.beatworker.pullPolicy | default "Always" }}
+        image: {{ .Values.beatworker.image }}
+        stdin: true
+        tty: true
+        resources:
+          requests:
+            memory: {{ .Values.beatworker.memoryRequest | default "50Mi" | quote }}
+            cpu: {{ .Values.beatworker.cpuRequest | default "50m" | quote }}
+          limits:
+            memory: {{ .Values.beatworker.memoryLimit  | default "1000Mi" | quote }}
+            cpu: {{ .Values.beatworker.cpuLimit | default "500m" | quote}}
+        command:
+          - ./bin/docker-entrypoint-beat.sh
+        envFrom:
+          - configMapRef:
+              name: pmxp-app-vars
+              optional: false
+          - secretRef:
+                name: {{ .Values.external_secrets.vault_name }}
+                optional: false
+          
+      {{- include "plane.podScheduling" .Values.beatworker }}
+      serviceAccount: pmxp-srv-account
+      serviceAccountName: pmxp-srv-account
+---

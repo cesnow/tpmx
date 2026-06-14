@@ -1,0 +1,15 @@
+# RabbitMQ message broker for Plane.
+#
+# Pinned to rabbitmq:3.13.7-management-alpine (Alpine 3.22) by digest. The
+# upstream image ships with outdated OS packages that carry CRITICAL/HIGH CVEs
+# (openssl/libssl3/libcrypto3, musl, libexpat, zlib). `apk upgrade` pulls the
+# patched Alpine packages so the resulting image scans clean for CRITICAL/HIGH.
+#
+
+FROM rabbitmq:3.13.7-management-alpine
+
+USER root
+RUN apk update \
+    && apk upgrade --no-cache \
+    && rm -rf /var/cache/apk/*
+USER rabbitmq

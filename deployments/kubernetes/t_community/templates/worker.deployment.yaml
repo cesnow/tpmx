@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: twsss
+  name: pmxp-worker-wl
+  {{- template "plane.labelsAndAnnotations" .Values.worker }}
+spec:
+  replicas: {{ .Values.worker.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app.name: twsss-pmxp-worker
+  template:
+    metadata:
+      namespace: twsss
+      labels:
+        app.name: twsss-pmxp-worker
+      annotations:
+        timestamp: {{ now | quote }}
+    spec:
+      containers:
+      - name: pmxp-worker
+        imagePullPolicy: {{ .Values.worker.pullPolicy | default "Always" }}
+        image: {{ .Values.worker.image }}
+        stdin: true
+        tty: true
+        resources:
+          requests:
+            memory: {{ .Values.worker.memoryRequest | default "50Mi" | quote }}
+            cpu: {{ .Values.worker.cpuRequest | default "50m" | quote }}
+          limits:
+            memory: {{ .Values.worker.memoryLimit  | default "1000Mi" | quote }}
+            cpu: {{ .Values.worker.cpuLimit | default "500m" | quote}}
+        command:
+          - ./bin/docker-entrypoint-worker.sh
+        envFrom:
+          - configMapRef:
+              name: pmxp-app-vars
+              optional: false
+          - secretRef:
+              name: {{ .Values.external_secrets.vault_name }}
+              optional: false
+      {{- include "plane.podScheduling" .Values.worker }}
+      serviceAccount: pmxp-srv-account
+      serviceAccountName: pmxp-srv-account
+---

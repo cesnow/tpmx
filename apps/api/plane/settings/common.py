@@ -220,6 +220,7 @@ if os.environ.get("ENABLE_READ_REPLICA", "0") == "1":
 # Redis Config
 REDIS_URL = os.environ.get("REDIS_URL")
 REDIS_SSL = REDIS_URL and "rediss" in REDIS_URL
+REDIS_CLUSTER = os.environ.get("REDIS_CLUSTER", "0") == "1"
 
 if REDIS_SSL:
     CACHES = {

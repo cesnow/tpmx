@@ -1,0 +1,17 @@
+FROM caddy:2.11.4-builder-alpine AS caddy-builder
+
+# Patch OS packages (e.g. openssl CVE-2026-45447) before building
+RUN apk upgrade --no-cache
+
+RUN xcaddy build \
+        --with github.com/caddy-dns/cloudflare@v0.2.4 \
+        --with github.com/caddy-dns/digitalocean@04bde2867106aa1b44c2f9da41a285fa02e629c5 \
+        --with github.com/mholt/caddy-l4@1d459d3c0a3232499a5f2b6122c4e90786d93a11
+
+FROM caddy:2.11.4-alpine
+
+# Patch OS packages (openssl CVE-2026-45447) and install runtime deps
+RUN apk upgrade --no-cache && \
+    apk add --no-cache nss-tools bash curl
+
+COPY --from=caddy-builder /usr/bin/caddy /usr/bin/caddy

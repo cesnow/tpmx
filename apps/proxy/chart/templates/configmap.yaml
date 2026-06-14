@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "plane-proxy.fullname" . }}-caddyfile
+  labels:
+    {{- include "plane-proxy.labels" . | nindent 4 }}
+data:
+  # Single source of truth: chart/files/Caddyfile, rendered with values.yaml.
+  Caddyfile: |-
+{{ tpl (.Files.Get "files/Caddyfile") . | indent 4 }}

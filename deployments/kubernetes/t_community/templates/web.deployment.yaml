@@ -1,0 +1,58 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: twsss
+  name: pmxp-web
+  labels:
+    app.name: twsss-pmxp-web
+spec:
+  {{- if not .Values.web.assign_cluster_ip }}
+  clusterIP: None
+  {{- end }}
+  ports:
+  - name: web-3000
+    port: 3000
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app.name: twsss-pmxp-web
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: twsss
+  name: pmxp-web-web
+  {{- template "plane.labelsAndAnnotations" .Values.web }}
+spec:
+  replicas: {{ .Values.web.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app.name: twsss-pmxp-web
+  template:
+    metadata:
+      namespace: twsss
+      labels:
+        app.name: twsss-pmxp-web
+      annotations:
+        timestamp: {{ now | quote }}
+    spec:
+      containers:
+      - name: pmxp-web
+        imagePullPolicy: {{ .Values.web.pullPolicy | default "Always" }}
+        image: {{ .Values.web.image }}
+        stdin: true
+        tty: true
+        resources:
+          requests:
+            memory: {{ .Values.web.memoryRequest | default "50Mi" | quote }}
+            cpu: {{ .Values.web.cpuRequest | default "50m" | quote }}
+          limits:
+            memory: {{ .Values.web.memoryLimit  | default "1000Mi" | quote }}
+            cpu: {{ .Values.web.cpuLimit | default "500m" | quote}}
+      {{- include "plane.podScheduling" .Values.web }}
+      serviceAccount: pmxp-srv-account
+      serviceAccountName: pmxp-srv-account
+---

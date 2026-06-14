@@ -1,0 +1,29 @@
+# Public hostname served by the Istio gateway and matched by the VirtualService.
+host: plane.example.com
+
+image:
+  url: cesnow/caddy:2.11.4-alpine
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+# Environment consumed by the Caddyfile.
+env:
+  fileSizeLimit: "5242880"   # 5 MB upload cap -> {$FILE_SIZE_LIMIT}
+  bucketName: "uploads"      # MinIO bucket    -> {$BUCKET_NAME}
+  trustedProxies: "0.0.0.0/0" # -> {$TRUSTED_PROXIES}; tighten to your gateway CIDR
+
+# Upstream targets (host:port) the Caddyfile reverse-proxies to.
+backends:
+  admin: "admin:3000"        # /god-mode
+  api: "api:8000"            # /api, /auth, /static
+  minio: "plane-minio:9000"  # MinIO bucket
+  web: "web:3000"            # /* fallback
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
